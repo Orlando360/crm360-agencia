@@ -3,7 +3,7 @@ import { supabase } from "./supabase";
 import { useAuth } from "./AuthContext";
 
 // ═══════════════════════════════════════════════════════════════════
-//  CRM 360™ AGENCIA — Orlando Iguarán
+//  La Agenda 360 AGENCIA — Orlando Iguarán
 //  Módulos: Dashboard · Clientes · Contenido · Pautas · Finanzas · Equipo · IA
 // ═══════════════════════════════════════════════════════════════════
 
@@ -454,7 +454,7 @@ export default function CRM360() {
               </svg>
             </div>
             <div>
-              <div style={{fontSize:13,fontWeight:700,color:TXT,letterSpacing:"0.02em"}}>CRM 360™</div>
+              <div style={{fontSize:13,fontWeight:700,color:TXT,letterSpacing:"0.02em"}}>La Agenda 360</div>
               <div style={{fontSize:9,color:MUTED,letterSpacing:"0.1em"}}>AGENCIA ORLANDO</div>
             </div>
           </div>

@@ -51,7 +51,7 @@ export default function Login() {
               <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
             </svg>
           </div>
-          <div style={{fontSize:18, fontWeight:700, color:TXT, letterSpacing:"0.01em"}}>CRM 360™</div>
+          <div style={{fontSize:18, fontWeight:700, color:TXT, letterSpacing:"0.01em"}}>La Agenda 360</div>
           <div style={{fontSize:11, color:MUTED, marginTop:2, letterSpacing:"0.08em"}}>AGENCIA ORLANDO</div>
         </div>
 
