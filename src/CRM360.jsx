@@ -1,20 +1,24 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
+import { useAuth } from "./AuthContext";
 
 // ═══════════════════════════════════════════════════════════════════
 //  CRM 360™ AGENCIA — Orlando Iguarán
 //  Módulos: Dashboard · Clientes · Contenido · Pautas · Finanzas · Equipo · IA
 // ═══════════════════════════════════════════════════════════════════
 
-const G     = "#F5C518";
-const BG    = "#0C0C0E";
-const S1    = "#141418";
-const S2    = "#1C1C22";
-const GREEN = "#34D399";
-const RED   = "#F87171";
-const BLUE  = "#60A5FA";
-const PURPLE= "#A78BFA";
-const ORANGE= "#FB923C";
+const G     = "#C9A96E";
+const BG    = "#F5F0E8";
+const S1    = "#FFFFFF";
+const S2    = "#F0EBE0";
+const GREEN = "#6A9B5A";
+const RED   = "#B85C50";
+const BLUE  = "#5A7FA0";
+const PURPLE= "#7E6FA0";
+const ORANGE= "#B87840";
+const TXT   = "#2C2C2C";
+const MUTED = "#8A8580";
+const BORDER= "#E8E2D5";
 
 async function callClaude(system, user) {
   try {
@@ -202,7 +206,7 @@ function Gauge({val,size=80,stroke=6,color=G}) {
   const cx=size/2, cy=size/2;
   return (
     <svg width={size} height={size} style={{transform:"rotate(-90deg)"}}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth={stroke}/>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke={BORDER} strokeWidth={stroke}/>
       <circle cx={cx} cy={cy} r={r} fill="none" stroke={color} strokeWidth={stroke}
         strokeDasharray={`${dash} ${circ}`} strokeLinecap="round"
         style={{transition:"stroke-dasharray .7s cubic-bezier(.4,0,.2,1)"}}/>
@@ -235,7 +239,7 @@ function Radar({scores,size=130}) {
 }
 
 const Spin = ({sz=16}) => (
-  <div style={{width:sz,height:sz,border:`2px solid rgba(245,197,24,0.12)`,borderTop:`2px solid ${G}`,
+  <div style={{width:sz,height:sz,border:`2px solid ${BORDER}`,borderTop:`2px solid ${G}`,
     borderRadius:"50%",animation:"spin .7s linear infinite",flexShrink:0}}/>
 );
 
@@ -243,6 +247,7 @@ const Spin = ({sz=16}) => (
 //  APP PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════
 export default function CRM360() {
+  const { user, signOut, logActivity } = useAuth();
   const [clientes,setClientes]   = useState(CLIENTES_INIT);
   const [equipo,setEquipo]       = useState(EQUIPO_INIT);
   const [vista,setVista]         = useState("dashboard");
@@ -277,14 +282,16 @@ export default function CRM360() {
 
   // ─── Supabase: guardar clientes al mutar ─────────────────────────
   useEffect(()=>{
+    if(!user) return;
     clientes.forEach(c=>{
-      supabase.from("clientes").upsert(c).then(()=>{});
+      supabase.from("clientes").upsert({...c, updated_by:user.email, updated_at:new Date().toISOString()}).then(()=>{});
     });
   },[clientes]);
 
   useEffect(()=>{
+    if(!user) return;
     equipo.forEach(e=>{
-      supabase.from("equipo").upsert(e).then(()=>{});
+      supabase.from("equipo").upsert({...e, updated_by:user.email, updated_at:new Date().toISOString()}).then(()=>{});
     });
   },[equipo]);
 
@@ -392,15 +399,15 @@ export default function CRM360() {
 
   // ─── ESTILOS BASE ────────────────────────────────────────────────
   const card = (x={}) => ({
-    background:S1,borderRadius:18,padding:18,
-    boxShadow:"0 4px 28px rgba(0,0,0,0.45), 0 1px 0 rgba(255,255,255,0.04) inset",
-    border:"1px solid rgba(255,255,255,0.05)",...x
+    background:S1,borderRadius:16,padding:18,
+    boxShadow:"0 2px 16px rgba(44,44,44,0.07)",
+    border:`1px solid ${BORDER}`,...x
   });
   const pill=(color,bg)=>({display:"inline-flex",alignItems:"center",padding:"3px 9px",borderRadius:20,
-    fontSize:10,fontWeight:700,background:bg||`${color}18`,color,whiteSpace:"nowrap"});
-  const BtnG  = {border:"none",borderRadius:11,padding:"9px 16px",fontWeight:700,fontSize:12,cursor:"pointer",background:G,color:BG};
-  const BtnO  = {border:"1px solid rgba(255,255,255,0.08)",borderRadius:11,padding:"9px 16px",fontWeight:600,fontSize:12,cursor:"pointer",background:"rgba(255,255,255,0.04)",color:"rgba(255,255,255,0.55)"};
-  const INP   = {background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:10,padding:"9px 12px",color:"#fff",fontSize:12,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
+    fontSize:10,fontWeight:600,background:bg||`${color}15`,color,whiteSpace:"nowrap"});
+  const BtnG  = {border:"none",borderRadius:10,padding:"9px 16px",fontWeight:700,fontSize:12,cursor:"pointer",background:G,color:"#fff"};
+  const BtnO  = {border:`1px solid ${BORDER}`,borderRadius:10,padding:"9px 16px",fontWeight:500,fontSize:12,cursor:"pointer",background:"transparent",color:MUTED};
+  const INP   = {background:BG,border:`1.5px solid ${BORDER}`,borderRadius:9,padding:"9px 12px",color:TXT,fontSize:12,outline:"none",width:"100%",boxSizing:"border-box",fontFamily:"inherit"};
 
   // ─── NAVEGACIÓN ──────────────────────────────────────────────────
   const NAV = [
@@ -420,7 +427,7 @@ export default function CRM360() {
   ];
 
   return (
-    <div style={{display:"flex",minHeight:"100vh",background:BG,fontFamily:"'Inter','DM Sans',sans-serif",color:"#fff"}}>
+    <div style={{display:"flex",minHeight:"100vh",background:BG,fontFamily:"'Inter',sans-serif",color:TXT}}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
         *{box-sizing:border-box;margin:0;padding:0}
@@ -428,27 +435,27 @@ export default function CRM360() {
         @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
         @keyframes slideR{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
         @keyframes staggerIn{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
-        ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(245,197,24,0.12);border-radius:2px}
-        .hov:hover{background:rgba(255,255,255,0.035)!important;cursor:pointer}
-        .hov2:hover{opacity:.8;cursor:pointer}
-        input::placeholder,textarea::placeholder{color:rgba(255,255,255,0.18)}
-        select option{background:#1C1C22}
+        ::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:${BORDER};border-radius:4px}
+        .hov:hover{background:${S2}!important;cursor:pointer}
+        .hov2:hover{opacity:.75;cursor:pointer}
+        input::placeholder,textarea::placeholder{color:${MUTED}}
+        select option{background:${S1};color:${TXT}}
       `}</style>
 
       {/* ══ SIDEBAR ══════════════════════════════════════════════════ */}
       <div style={{width:220,background:S1,display:"flex",flexDirection:"column",padding:"22px 0",
-        borderRight:"1px solid rgba(255,255,255,0.04)",flexShrink:0,position:"sticky",top:0,height:"100vh",overflow:"hidden"}}>
+        flexShrink:0,position:"sticky",top:0,height:"100vh",overflow:"hidden"}}>
         {/* Logo */}
-        <div style={{padding:"0 18px 20px",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+        <div style={{padding:"0 18px 20px",borderBottom:`1px solid ${BORDER}`}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             <div style={{width:36,height:36,background:G,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0}}>
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={BG} strokeWidth="2.5">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5">
                 <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
               </svg>
             </div>
             <div>
-              <div style={{fontSize:13,fontWeight:800,letterSpacing:"0.02em"}}>CRM 360™</div>
-              <div style={{fontSize:9,color:"rgba(255,255,255,0.22)",letterSpacing:"0.1em"}}>AGENCIA ORLANDO</div>
+              <div style={{fontSize:13,fontWeight:700,color:TXT,letterSpacing:"0.02em"}}>CRM 360™</div>
+              <div style={{fontSize:9,color:MUTED,letterSpacing:"0.1em"}}>AGENCIA ORLANDO</div>
             </div>
           </div>
         </div>
@@ -459,33 +466,38 @@ export default function CRM360() {
             return (
               <div key={n.id} onClick={()=>{setVista(n.id);setSel(null);setSelEq(null);}}
                 className={active?"":"hov"}
-                style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:12,
+                style={{display:"flex",alignItems:"center",gap:10,padding:"10px 12px",borderRadius:10,
                   cursor:"pointer",marginBottom:2,transition:"all .15s",
-                  background:active?"rgba(245,197,24,0.1)":"transparent",
-                  color:active?G:"rgba(255,255,255,0.38)",fontWeight:active?700:400,fontSize:12,
-                  border:`1px solid ${active?"rgba(245,197,24,0.12)":"transparent"}`,
+                  background:active?`${G}18`:"transparent",
+                  color:active?G:MUTED,fontWeight:active?600:400,fontSize:12,
+                  border:`1px solid ${active?`${G}30`:"transparent"}`,
                   animation:stagger?`staggerIn .4s ease ${idx*0.05}s both`:"none"}}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{flexShrink:0}}>
                   <path d={n.icon}/>
                 </svg>
                 <span>{n.lbl}</span>
-                {n.id==="ia"&&<span style={{marginLeft:"auto",fontSize:8,background:G,color:BG,padding:"1px 5px",borderRadius:3,fontWeight:800}}>AI</span>}
-                {n.id==="pautas"&&pautasActivas.length>0&&<span style={{marginLeft:"auto",fontSize:8,background:`${GREEN}22`,color:GREEN,padding:"1px 5px",borderRadius:3,fontWeight:700}}>{pautasActivas.length}</span>}
+                {n.id==="ia"&&<span style={{marginLeft:"auto",fontSize:8,background:G,color:TXT,padding:"1px 5px",borderRadius:3,fontWeight:700}}>AI</span>}
+                {n.id==="pautas"&&pautasActivas.length>0&&<span style={{marginLeft:"auto",fontSize:8,background:`${GREEN}20`,color:GREEN,padding:"1px 5px",borderRadius:3,fontWeight:600}}>{pautasActivas.length}</span>}
               </div>
             );
           })}
         </nav>
         {/* Alertas sidebar */}
         {alertCount>0&&(
-          <div style={{margin:"0 8px 14px",padding:"10px 12px",background:"rgba(248,113,113,0.07)",
-            border:"1px solid rgba(248,113,113,0.14)",borderRadius:12}}>
-            <div style={{fontSize:9,color:RED,fontWeight:700,marginBottom:6,letterSpacing:"0.08em"}}>⚠ {alertCount} ALERTA{alertCount>1?"S":""}</div>
+          <div style={{margin:"0 8px 14px",padding:"10px 12px",background:`${RED}0D`,
+            border:`1px solid ${RED}25`,borderRadius:10}}>
+            <div style={{fontSize:9,color:RED,fontWeight:600,marginBottom:6,letterSpacing:"0.06em"}}>⚠ {alertCount} ALERTA{alertCount>1?"S":""}</div>
             {clientes.filter(c=>c.alertas.length>0).map(c=>c.alertas.map((a,i)=>(
-              <div key={`${c.id}${i}`} style={{fontSize:9,color:"rgba(255,255,255,0.35)",marginBottom:2,lineHeight:1.4}}>{a}</div>
+              <div key={`${c.id}${i}`} style={{fontSize:9,color:MUTED,marginBottom:2,lineHeight:1.4}}>{a}</div>
             )))}
           </div>
         )}
-        <div style={{padding:"0 18px"}}><div style={{fontSize:8,color:"rgba(255,255,255,0.1)",letterSpacing:"0.08em"}}>MÉTODO 360™ v3.0</div></div>
+        {/* Usuario */}
+        <div style={{margin:"0 8px 8px",padding:"10px 12px",background:BG,borderRadius:10,border:`1px solid ${BORDER}`}}>
+          <div style={{fontSize:10,color:TXT,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",marginBottom:6}}>{user?.email}</div>
+          <button onClick={signOut} style={{fontSize:10,color:MUTED,background:"none",border:"none",cursor:"pointer",padding:0,fontFamily:"inherit"}}>Cerrar sesión →</button>
+        </div>
+        <div style={{padding:"0 18px"}}><div style={{fontSize:8,color:MUTED,letterSpacing:"0.08em"}}>MÉTODO 360™ v3.0</div></div>
       </div>
 
       {/* ══ MAIN ═════════════════════════════════════════════════════ */}
@@ -497,8 +509,8 @@ export default function CRM360() {
             {/* Header */}
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:24}}>
               <div>
-                <div style={{fontSize:22,fontWeight:800}}>Buen día, Orlando 👋</div>
-                <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginTop:3}}>
+                <div style={{fontSize:22,fontWeight:700,color:TXT}}>Buen día, Orlando 👋</div>
+                <div style={{fontSize:12,color:MUTED,marginTop:3}}>
                   {new Date().toLocaleDateString("es-CO",{weekday:"long",day:"numeric",month:"long"})}
                 </div>
               </div>
@@ -517,14 +529,14 @@ export default function CRM360() {
               ].map((k,i)=>(
                 <div key={i} style={{...card(),display:"flex",flexDirection:"column",alignItems:"center",padding:"18px 12px",
                   animation:stagger?`staggerIn .4s ease ${i*0.08}s both`:"none"}}>
-                  <div style={{fontSize:8,color:"rgba(255,255,255,0.28)",letterSpacing:"0.12em",marginBottom:10,textAlign:"center"}}>{k.lbl}</div>
+                  <div style={{fontSize:8,color:MUTED,letterSpacing:"0.1em",marginBottom:10,textAlign:"center"}}>{k.lbl}</div>
                   <div style={{position:"relative",width:76,height:76}}>
                     <Gauge val={k.gauge} size={76} stroke={6} color={k.color}/>
                     <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
                       <span style={{fontSize:k.tipo==="string"?11:18,fontWeight:800,color:k.color,lineHeight:1,textAlign:"center"}}>{k.valDisplay}</span>
                     </div>
                   </div>
-                  <div style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:8,textAlign:"center"}}>{k.sub}</div>
+                  <div style={{fontSize:9,color:MUTED,marginTop:8,textAlign:"center"}}>{k.sub}</div>
                 </div>
               ))}
             </div>
@@ -538,18 +550,18 @@ export default function CRM360() {
                   <button style={{...BtnO,padding:"5px 10px",fontSize:11}} onClick={()=>setVista("contenido")}>Ver todo →</button>
                 </div>
                 {contenidoSemana.length===0&&(
-                  <div style={{padding:"20px 18px",fontSize:12,color:"rgba(255,255,255,0.2)"}}>Sin piezas programadas esta semana</div>
+                  <div style={{padding:"20px 18px",fontSize:12,color:MUTED}}>Sin piezas programadas esta semana</div>
                 )}
                 {contenidoSemana.slice(0,5).map(co=>{
                   const cl=clientes.find(c=>c.contenido.some(x=>x.id===co.id));
                   const es=ESTADO_CONTENIDO[co.estado]||{c:"#555",l:co.estado};
                   return (
                     <div key={co.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 18px",
-                      borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                      borderTop:`1px solid ${BORDER}`}}>
                       <div style={{width:6,height:6,borderRadius:"50%",background:es.c,flexShrink:0}}/>
                       <div style={{flex:1,minWidth:0}}>
                         <div style={{fontSize:11,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{co.descripcion}</div>
-                        <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:1}}>{cl?.nombre} · {co.tipo} · {co.responsable}</div>
+                        <div style={{fontSize:10,color:MUTED,marginTop:1}}>{cl?.nombre} · {co.tipo} · {co.responsable}</div>
                       </div>
                       <span style={pill(es.c)}>{es.l}</span>
                     </div>
@@ -561,7 +573,7 @@ export default function CRM360() {
               <div style={{display:"flex",flexDirection:"column",gap:14}}>
                 <div style={card({padding:"14px 16px"})}>
                   <div style={{fontSize:11,fontWeight:700,marginBottom:10,color:G}}>💰 Pautas activas</div>
-                  {pautasActivas.length===0&&<div style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>Sin pautas activas</div>}
+                  {pautasActivas.length===0&&<div style={{fontSize:11,color:MUTED}}>Sin pautas activas</div>}
                   {pautasActivas.map(p=>{
                     const cl=clientes.find(c=>c.pautas.some(x=>x.id===p.id));
                     const pct=Math.round((p.gastado/p.presupuesto)*100)||0;
@@ -574,7 +586,7 @@ export default function CRM360() {
                         <div style={{height:4,background:"rgba(255,255,255,0.06)",borderRadius:2}}>
                           <div style={{width:`${pct}%`,height:"100%",background:G,borderRadius:2}}/>
                         </div>
-                        <div style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:2}}>Gastado {pct}% · {p.objetivo}</div>
+                        <div style={{fontSize:9,color:MUTED,marginTop:2}}>Gastado {pct}% · {p.objetivo}</div>
                       </div>
                     );
                   })}
@@ -604,9 +616,9 @@ export default function CRM360() {
               </div>
               <table style={{width:"100%",borderCollapse:"collapse"}}>
                 <thead>
-                  <tr style={{borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                  <tr style={{borderTop:`1px solid ${BORDER}`}}>
                     {["CLIENTE","FASE","SCORE","CONTENIDO","PAUTAS","CONTRATO",""].map((h,i)=>(
-                      <th key={i} style={{textAlign:"left",padding:"8px 18px",fontSize:9,color:"rgba(255,255,255,0.2)",
+                      <th key={i} style={{textAlign:"left",padding:"8px 18px",fontSize:9,color:MUTED,
                         letterSpacing:"0.1em",fontWeight:600,background:"rgba(255,255,255,0.015)"}}>{h}</th>
                     ))}
                   </tr>
@@ -614,14 +626,14 @@ export default function CRM360() {
                 <tbody>
                   {clientes.map((c,i)=>(
                     <tr key={c.id} className="hov" onClick={()=>abrirCliente(c)}
-                      style={{borderTop:"1px solid rgba(255,255,255,0.03)",transition:"background .12s",
+                      style={{borderTop:`1px solid ${BORDER}`,transition:"background .12s",
                         animation:stagger?`staggerIn .4s ease ${i*0.06+0.2}s both`:"none"}}>
                       <td style={{padding:"11px 18px"}}>
                         <div style={{display:"flex",alignItems:"center",gap:10}}>
                           <div style={{width:30,height:30,borderRadius:8,background:`${c.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:c.color,flexShrink:0}}>{c.nombre.charAt(0)}</div>
                           <div>
                             <div style={{fontWeight:700,fontSize:12}}>{c.nombre}</div>
-                            <div style={{fontSize:9,color:"rgba(255,255,255,0.3)"}}>{c.sector}</div>
+                            <div style={{fontSize:9,color:MUTED}}>{c.sector}</div>
                           </div>
                         </div>
                       </td>
@@ -644,13 +656,13 @@ export default function CRM360() {
                             if(!cnt) return null;
                             return <span key={e} style={pill(ESTADO_CONTENIDO[e]?.c||"#555")}>{cnt} {ESTADO_CONTENIDO[e]?.l}</span>;
                           })}
-                          {c.contenido.length===0&&<span style={{fontSize:9,color:"rgba(255,255,255,0.2)"}}>—</span>}
+                          {c.contenido.length===0&&<span style={{fontSize:9,color:MUTED}}>—</span>}
                         </div>
                       </td>
                       <td style={{padding:"11px 18px"}}>
                         {c.pautas.filter(p=>p.estado==="activa").length>0
                           ?<span style={pill(GREEN)}>{c.pautas.filter(p=>p.estado==="activa").length} activa{c.pautas.filter(p=>p.estado==="activa").length>1?"s":""}</span>
-                          :<span style={{fontSize:9,color:"rgba(255,255,255,0.2)"}}>—</span>}
+                          :<span style={{fontSize:9,color:MUTED}}>—</span>}
                       </td>
                       <td style={{padding:"11px 18px"}}>
                         <div style={{fontSize:12,fontWeight:700}}>{fmt(c.contrato)}</div>
@@ -694,14 +706,14 @@ export default function CRM360() {
                       <div style={{width:38,height:38,borderRadius:11,background:`${c.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,fontWeight:800,color:c.color}}>{c.nombre.charAt(0)}</div>
                       <div>
                         <div style={{fontWeight:800,fontSize:13}}>{c.nombre}</div>
-                        <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:1}}>{c.tipoServicio}</div>
+                        <div style={{fontSize:10,color:MUTED,marginTop:1}}>{c.tipoServicio}</div>
                       </div>
                     </div>
                     <span style={pill(fc[c.fase]||G)}>{c.fase}</span>
                   </div>
                   {/* Score mini */}
                   {c.score>0&&(
-                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,padding:10,background:"rgba(255,255,255,0.02)",borderRadius:10,border:"1px solid rgba(255,255,255,0.04)"}}>
+                    <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:10,padding:10,background:S2,borderRadius:10,border:`1px solid ${BORDER}`}}>
                       <div style={{position:"relative",width:52,height:52,flexShrink:0}}>
                         <Gauge val={c.score} size={52} stroke={4.5} color={sc(c.score)}/>
                         <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:13,fontWeight:800,color:sc(c.score)}}>{c.score}</div>
@@ -711,7 +723,7 @@ export default function CRM360() {
                         {PILARES.slice(0,3).map(p=>(
                           <div key={p} style={{marginBottom:4}}>
                             <div style={{display:"flex",justifyContent:"space-between",fontSize:8,marginBottom:1}}>
-                              <span style={{color:"rgba(255,255,255,0.3)"}}>{PL[p]}</span>
+                              <span style={{color:MUTED}}>{PL[p]}</span>
                               <span style={{color:sc(c.scores[p]),fontWeight:700}}>{c.scores[p]}</span>
                             </div>
                             <div style={{height:2.5,background:"rgba(255,255,255,0.06)",borderRadius:2}}>
@@ -725,13 +737,13 @@ export default function CRM360() {
                   {/* Stats rápidas */}
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:6,marginBottom:10}}>
                     {[
-                      {lbl:"Contenido",val:c.contenido.length,color:"rgba(255,255,255,0.5)"},
+                      {lbl:"Contenido",val:c.contenido.length,color:TXT},
                       {lbl:"Pautas",val:c.pautas.filter(p=>p.estado==="activa").length,color:GREEN},
                       {lbl:"Entregables",val:c.entregables.filter(e=>e.estado!=="entregado").length,color:c.entregables.some(e=>e.estado==="pendiente")?G:"rgba(255,255,255,0.5)"},
                     ].map(k=>(
-                      <div key={k.lbl} style={{background:"rgba(255,255,255,0.025)",borderRadius:8,padding:"6px 8px",textAlign:"center"}}>
+                      <div key={k.lbl} style={{background:S2,borderRadius:8,padding:"6px 8px",textAlign:"center"}}>
                         <div style={{fontSize:14,fontWeight:800,color:k.color}}>{k.val}</div>
-                        <div style={{fontSize:8,color:"rgba(255,255,255,0.25)",marginTop:1}}>{k.lbl}</div>
+                        <div style={{fontSize:8,color:MUTED,marginTop:1}}>{k.lbl}</div>
                       </div>
                     ))}
                   </div>
@@ -754,7 +766,7 @@ export default function CRM360() {
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
               <div>
                 <div style={{fontSize:22,fontWeight:800}}>📅 Calendario de Contenido</div>
-                <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginTop:3}}>Todas las piezas — semana actual y próximas</div>
+                <div style={{fontSize:12,color:MUTED,marginTop:3}}>Todas las piezas — semana actual y próximas</div>
               </div>
             </div>
             {/* Por cliente */}
@@ -768,12 +780,12 @@ export default function CRM360() {
                   </div>
                   <button style={{...BtnO,padding:"5px 10px",fontSize:10}} onClick={()=>{setSel(c);setModal("contenido");setModalData({})}}>+ Agregar</button>
                 </div>
-                {c.contenido.length===0&&<div style={{padding:"12px 18px",fontSize:11,color:"rgba(255,255,255,0.2)"}}>Sin piezas de contenido</div>}
+                {c.contenido.length===0&&<div style={{padding:"12px 18px",fontSize:11,color:MUTED}}>Sin piezas de contenido</div>}
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
                   <thead>
-                    <tr style={{borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                    <tr style={{borderTop:`1px solid ${BORDER}`}}>
                       {["SEMANA","TIPO","DESCRIPCIÓN","RESPONSABLE","ESTADO","OBS."].map((h,i)=>(
-                        <th key={i} style={{textAlign:"left",padding:"7px 18px",fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em",fontWeight:600,background:"rgba(255,255,255,0.015)"}}>{h}</th>
+                        <th key={i} style={{textAlign:"left",padding:"7px 18px",fontSize:8,color:MUTED,letterSpacing:"0.1em",fontWeight:600,background:"rgba(255,255,255,0.015)"}}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -783,13 +795,13 @@ export default function CRM360() {
                       const esHoy=co.semana>=semana(-3)&&co.semana<=semana(7);
                       return (
                         <tr key={co.id} className="hov" onClick={()=>cicloEstadoContenido(c.id,co.id)}
-                          style={{borderTop:"1px solid rgba(255,255,255,0.03)",background:esHoy?"rgba(245,197,24,0.02)":"transparent"}}>
+                          style={{borderTop:`1px solid ${BORDER}`,background:esHoy?"rgba(245,197,24,0.02)":"transparent"}}>
                           <td style={{padding:"10px 18px",fontSize:10,color:esHoy?G:"rgba(255,255,255,0.4)",fontWeight:esHoy?700:400}}>{co.semana}</td>
                           <td style={{padding:"10px 18px"}}><span style={{...pill(c.color),fontSize:9}}>{co.tipo}</span></td>
                           <td style={{padding:"10px 18px",fontSize:11,maxWidth:200}}>{co.descripcion}</td>
-                          <td style={{padding:"10px 18px",fontSize:10,color:"rgba(255,255,255,0.4)"}}>{co.responsable}</td>
+                          <td style={{padding:"10px 18px",fontSize:10,color:TXT}}>{co.responsable}</td>
                           <td style={{padding:"10px 18px"}}><span style={pill(es.c)}>{es.l}</span></td>
-                          <td style={{padding:"10px 18px",fontSize:10,color:"rgba(255,255,255,0.3)",maxWidth:120}}>{co.observacion||"—"}</td>
+                          <td style={{padding:"10px 18px",fontSize:10,color:MUTED,maxWidth:120}}>{co.observacion||"—"}</td>
                         </tr>
                       );
                     })}
@@ -804,7 +816,7 @@ export default function CRM360() {
         {vista==="pautas"&&(
           <div style={{animation:"fadeUp .3s ease"}}>
             <div style={{fontSize:22,fontWeight:800,marginBottom:6}}>📊 Pautas Publicitarias</div>
-            <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginBottom:20}}>Control de presupuesto, plataformas y resultados</div>
+            <div style={{fontSize:12,color:MUTED,marginBottom:20}}>Control de presupuesto, plataformas y resultados</div>
             {/* KPIs pautas */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
               {[
@@ -814,7 +826,7 @@ export default function CRM360() {
                 {lbl:"CLIENTES CON PAUTA",val:clientes.filter(c=>c.pautas.some(p=>p.estado==="activa")).length,color:PURPLE},
               ].map((k,i)=>(
                 <div key={i} style={{...card(),padding:"14px 16px"}}>
-                  <div style={{fontSize:8,color:"rgba(255,255,255,0.28)",letterSpacing:"0.1em",marginBottom:6}}>{k.lbl}</div>
+                  <div style={{fontSize:8,color:MUTED,letterSpacing:"0.1em",marginBottom:6}}>{k.lbl}</div>
                   <div style={{fontSize:22,fontWeight:800,color:k.color}}>{k.val}</div>
                 </div>
               ))}
@@ -830,9 +842,9 @@ export default function CRM360() {
                 </div>
                 <table style={{width:"100%",borderCollapse:"collapse"}}>
                   <thead>
-                    <tr style={{borderTop:"1px solid rgba(255,255,255,0.04)"}}>
+                    <tr style={{borderTop:`1px solid ${BORDER}`}}>
                       {["PLATAFORMA","PRESUPUESTO","GASTADO","PERÍODO","OBJETIVO","RESULTADO","ESTADO"].map((h,i)=>(
-                        <th key={i} style={{textAlign:"left",padding:"7px 18px",fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em",fontWeight:600,background:"rgba(255,255,255,0.015)"}}>{h}</th>
+                        <th key={i} style={{textAlign:"left",padding:"7px 18px",fontSize:8,color:MUTED,letterSpacing:"0.1em",fontWeight:600,background:"rgba(255,255,255,0.015)"}}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -841,7 +853,7 @@ export default function CRM360() {
                       const es=ESTADO_PAUTA[p.estado]||{c:"#555",l:p.estado};
                       const pct=Math.round((p.gastado/p.presupuesto)*100)||0;
                       return (
-                        <tr key={p.id} style={{borderTop:"1px solid rgba(255,255,255,0.03)"}}>
+                        <tr key={p.id} style={{borderTop:`1px solid ${BORDER}`}}>
                           <td style={{padding:"10px 18px",fontWeight:700,fontSize:12}}>{p.plataforma}</td>
                           <td style={{padding:"10px 18px",color:G,fontWeight:700,fontSize:12}}>{fmt(p.presupuesto)}</td>
                           <td style={{padding:"10px 18px",fontSize:11}}>
@@ -849,9 +861,9 @@ export default function CRM360() {
                             <div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2,marginTop:4,width:60}}>
                               <div style={{width:`${pct}%`,height:"100%",background:G,borderRadius:2}}/>
                             </div>
-                            <div style={{fontSize:8,color:"rgba(255,255,255,0.3)",marginTop:2}}>{pct}%</div>
+                            <div style={{fontSize:8,color:MUTED,marginTop:2}}>{pct}%</div>
                           </td>
-                          <td style={{padding:"10px 18px",fontSize:10,color:"rgba(255,255,255,0.4)"}}>{p.inicio} → {p.fin}</td>
+                          <td style={{padding:"10px 18px",fontSize:10,color:TXT}}>{p.inicio} → {p.fin}</td>
                           <td style={{padding:"10px 18px",fontSize:10}}>{p.objetivo}</td>
                           <td style={{padding:"10px 18px",fontSize:10,color:GREEN}}>{p.resultado}</td>
                           <td style={{padding:"10px 18px"}}><span style={pill(es.c)}>{es.l}</span></td>
@@ -869,7 +881,7 @@ export default function CRM360() {
         {vista==="finanzas"&&(
           <div style={{animation:"fadeUp .3s ease"}}>
             <div style={{fontSize:22,fontWeight:800,marginBottom:6}}>💰 Finanzas</div>
-            <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginBottom:20}}>Ingresos · Pagos clientes · Costos de agencia</div>
+            <div style={{fontSize:12,color:MUTED,marginBottom:20}}>Ingresos · Pagos clientes · Costos de agencia</div>
             {/* KPIs */}
             <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12,marginBottom:18}}>
               {[
@@ -879,36 +891,36 @@ export default function CRM360() {
                 {lbl:"COSTO EQUIPO MES",val:fmt(costoEquipoMes),color:PURPLE,pct:100},
               ].map((k,i)=>(
                 <div key={i} style={{...card(),display:"flex",flexDirection:"column",alignItems:"center",padding:"18px 12px"}}>
-                  <div style={{fontSize:8,color:"rgba(255,255,255,0.28)",letterSpacing:"0.1em",marginBottom:10,textAlign:"center"}}>{k.lbl}</div>
+                  <div style={{fontSize:8,color:MUTED,letterSpacing:"0.1em",marginBottom:10,textAlign:"center"}}>{k.lbl}</div>
                   <div style={{position:"relative",width:72,height:72}}>
                     <Gauge val={k.pct} size={72} stroke={5.5} color={k.color}/>
                     <div style={{position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:k.color,textAlign:"center"}}>{k.val}</div>
                   </div>
-                  <div style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:8}}>{k.pct}%</div>
+                  <div style={{fontSize:9,color:MUTED,marginTop:8}}>{k.pct}%</div>
                 </div>
               ))}
             </div>
             {/* Tabla clientes */}
             <div style={{...card({padding:0}),marginBottom:14}}>
-              <div style={{padding:"14px 18px 10px",fontSize:13,fontWeight:700,borderBottom:"1px solid rgba(255,255,255,0.05)"}}>Cobros clientes</div>
+              <div style={{padding:"14px 18px 10px",fontSize:13,fontWeight:700,borderBottom:`1px solid ${BORDER}`}}>Cobros clientes</div>
               <table style={{width:"100%",borderCollapse:"collapse"}}>
                 <thead>
                   <tr>{["CLIENTE","SERVICIO","CONTRATO","COBRADO","PENDIENTE","PROGRESO"].map((h,i)=>(
-                    <th key={i} style={{textAlign:"left",padding:"7px 18px",fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em",fontWeight:600,background:"rgba(255,255,255,0.015)"}}>{h}</th>
+                    <th key={i} style={{textAlign:"left",padding:"7px 18px",fontSize:8,color:MUTED,letterSpacing:"0.1em",fontWeight:600,background:"rgba(255,255,255,0.015)"}}>{h}</th>
                   ))}</tr>
                 </thead>
                 <tbody>
                   {clientes.filter(c=>c.contrato>0).map(c=>{
                     const pct=Math.round((c.pagado/c.contrato)*100)||0;
                     return (
-                      <tr key={c.id} style={{borderTop:"1px solid rgba(255,255,255,0.03)"}}>
+                      <tr key={c.id} style={{borderTop:`1px solid ${BORDER}`}}>
                         <td style={{padding:"10px 18px"}}>
                           <div style={{display:"flex",alignItems:"center",gap:8}}>
                             <div style={{width:24,height:24,borderRadius:6,background:`${c.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,color:c.color}}>{c.nombre.charAt(0)}</div>
                             <span style={{fontWeight:600,fontSize:12}}>{c.nombre}</span>
                           </div>
                         </td>
-                        <td style={{padding:"10px 18px",fontSize:10,color:"rgba(255,255,255,0.4)"}}>{c.tipoServicio}</td>
+                        <td style={{padding:"10px 18px",fontSize:10,color:TXT}}>{c.tipoServicio}</td>
                         <td style={{padding:"10px 18px",fontWeight:700,fontSize:12}}>{fmt(c.contrato)}</td>
                         <td style={{padding:"10px 18px",color:GREEN,fontWeight:700,fontSize:12}}>{fmt(c.pagado)}</td>
                         <td style={{padding:"10px 18px",color:c.pagado<c.contrato?RED:GREEN,fontWeight:700,fontSize:12}}>{fmt(c.contrato-c.pagado)}</td>
@@ -928,11 +940,11 @@ export default function CRM360() {
             </div>
             {/* Tabla equipo */}
             <div style={card({padding:0})}>
-              <div style={{padding:"14px 18px 10px",fontSize:13,fontWeight:700,borderBottom:"1px solid rgba(255,255,255,0.05)"}}>Honorarios equipo</div>
+              <div style={{padding:"14px 18px 10px",fontSize:13,fontWeight:700,borderBottom:`1px solid ${BORDER}`}}>Honorarios equipo</div>
               <table style={{width:"100%",borderCollapse:"collapse"}}>
                 <thead>
                   <tr>{["NOMBRE","ROL","PAGO MES","TIPO","ESTADO ÚLTIMO MES"].map((h,i)=>(
-                    <th key={i} style={{textAlign:"left",padding:"7px 18px",fontSize:8,color:"rgba(255,255,255,0.2)",letterSpacing:"0.1em",fontWeight:600,background:"rgba(255,255,255,0.015)"}}>{h}</th>
+                    <th key={i} style={{textAlign:"left",padding:"7px 18px",fontSize:8,color:MUTED,letterSpacing:"0.1em",fontWeight:600,background:"rgba(255,255,255,0.015)"}}>{h}</th>
                   ))}</tr>
                 </thead>
                 <tbody>
@@ -940,16 +952,16 @@ export default function CRM360() {
                     const ultimo=e.pagos[e.pagos.length-1];
                     const pe=PAGO_ESTADO[ultimo?.estado||"pendiente"];
                     return (
-                      <tr key={e.id} className="hov" onClick={()=>abrirEquipo(e)} style={{borderTop:"1px solid rgba(255,255,255,0.03)"}}>
+                      <tr key={e.id} className="hov" onClick={()=>abrirEquipo(e)} style={{borderTop:`1px solid ${BORDER}`}}>
                         <td style={{padding:"10px 18px"}}>
                           <div style={{display:"flex",alignItems:"center",gap:8}}>
                             <div style={{width:26,height:26,borderRadius:7,background:`${e.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:10,fontWeight:800,color:e.color}}>{e.nombre.charAt(0)}</div>
                             <span style={{fontWeight:600,fontSize:12}}>{e.nombre}</span>
                           </div>
                         </td>
-                        <td style={{padding:"10px 18px",fontSize:10,color:"rgba(255,255,255,0.4)"}}>{e.rol}</td>
+                        <td style={{padding:"10px 18px",fontSize:10,color:TXT}}>{e.rol}</td>
                         <td style={{padding:"10px 18px",fontWeight:700,color:G,fontSize:12}}>{fmt(e.pago)}</td>
-                        <td style={{padding:"10px 18px",fontSize:10,color:"rgba(255,255,255,0.4)"}}>{e.tipoPago}</td>
+                        <td style={{padding:"10px 18px",fontSize:10,color:TXT}}>{e.tipoPago}</td>
                         <td style={{padding:"10px 18px"}}><span style={pill(pe?.c||RED)}>{pe?.l||"—"}</span></td>
                       </tr>
                     );
@@ -966,7 +978,7 @@ export default function CRM360() {
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
               <div>
                 <div style={{fontSize:22,fontWeight:800}}>👥 Equipo</div>
-                <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginTop:3}}>Colaboradores, roles y honorarios</div>
+                <div style={{fontSize:12,color:MUTED,marginTop:3}}>Colaboradores, roles y honorarios</div>
               </div>
               <button style={BtnG} onClick={()=>{setModal("equipo");setModalData({})}}>+ Agregar</button>
             </div>
@@ -981,29 +993,29 @@ export default function CRM360() {
                       <div style={{width:44,height:44,borderRadius:12,background:`${e.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,color:e.color}}>{e.nombre.charAt(0)}</div>
                       <div>
                         <div style={{fontWeight:800,fontSize:14}}>{e.nombre}</div>
-                        <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:1}}>{e.rol}</div>
-                        <div style={{fontSize:9,color:"rgba(255,255,255,0.2)"}}>{e.especialidad}</div>
+                        <div style={{fontSize:10,color:MUTED,marginTop:1}}>{e.rol}</div>
+                        <div style={{fontSize:9,color:MUTED}}>{e.especialidad}</div>
                       </div>
                     </div>
                     <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:12}}>
-                      <div style={{background:"rgba(255,255,255,0.025)",borderRadius:8,padding:"8px 10px"}}>
-                        <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:2}}>HONORARIO MES</div>
+                      <div style={{background:S2,borderRadius:8,padding:"8px 10px"}}>
+                        <div style={{fontSize:9,color:MUTED,marginBottom:2}}>HONORARIO MES</div>
                         <div style={{fontSize:14,fontWeight:800,color:G}}>{fmt(e.pago)}</div>
                       </div>
-                      <div style={{background:"rgba(255,255,255,0.025)",borderRadius:8,padding:"8px 10px"}}>
-                        <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:2}}>PENDIENTE</div>
+                      <div style={{background:S2,borderRadius:8,padding:"8px 10px"}}>
+                        <div style={{fontSize:9,color:MUTED,marginBottom:2}}>PENDIENTE</div>
                         <div style={{fontSize:14,fontWeight:800,color:pendEq>0?RED:GREEN}}>{pendEq>0?fmt(pendEq):"Al día ✓"}</div>
                       </div>
                     </div>
                     <div style={{marginBottom:10}}>
-                      <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:5}}>CLIENTES ASIGNADOS</div>
+                      <div style={{fontSize:9,color:MUTED,marginBottom:5}}>CLIENTES ASIGNADOS</div>
                       <div style={{display:"flex",gap:5,flexWrap:"wrap"}}>
                         {clientesNombres.length>0
                           ?clientesNombres.map(n=><span key={n} style={pill(e.color)}>{n}</span>)
-                          :<span style={{fontSize:9,color:"rgba(255,255,255,0.2)"}}>Sin asignar</span>}
+                          :<span style={{fontSize:9,color:MUTED}}>Sin asignar</span>}
                       </div>
                     </div>
-                    <div style={{fontSize:9,color:"rgba(255,255,255,0.25)"}}>{e.tipoPago} · {e.email}</div>
+                    <div style={{fontSize:9,color:MUTED}}>{e.tipoPago} · {e.email}</div>
                   </div>
                 );
               })}
@@ -1017,7 +1029,7 @@ export default function CRM360() {
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:22}}>
               <div>
                 <div style={{fontSize:22,fontWeight:800}}>✦ Análisis IA</div>
-                <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginTop:3}}>Diagnóstico estratégico de la operación completa</div>
+                <div style={{fontSize:12,color:MUTED,marginTop:3}}>Diagnóstico estratégico de la operación completa</div>
               </div>
               <button style={BtnG} onClick={analizarCartera} disabled={iaLoad}>
                 {iaLoad?<span style={{display:"flex",alignItems:"center",gap:8}}><Spin sz={13}/>Analizando...</span>:"Analizar operación →"}
@@ -1027,20 +1039,20 @@ export default function CRM360() {
               <div style={{...card(),textAlign:"center",padding:"60px 20px"}}>
                 <div style={{fontSize:40,marginBottom:12,opacity:.15}}>✦</div>
                 <div style={{fontSize:16,fontWeight:700,marginBottom:8}}>Diagnóstico de agencia</div>
-                <div style={{fontSize:12,color:"rgba(255,255,255,0.3)",maxWidth:380,margin:"0 auto 24px",lineHeight:1.7}}>
+                <div style={{fontSize:12,color:MUTED,maxWidth:380,margin:"0 auto 24px",lineHeight:1.7}}>
                   Estado operación · Cliente prioritario · Riesgo churn · Upsell · Acción 3 días
                 </div>
                 <button style={BtnG} onClick={analizarCartera}>Iniciar →</button>
               </div>
             )}
-            {iaLoad&&<div style={{...card(),textAlign:"center",padding:"60px 20px"}}><Spin sz={30}/><div style={{fontSize:12,color:"rgba(255,255,255,0.3)",marginTop:14}}>Procesando operación con Método 360™...</div></div>}
+            {iaLoad&&<div style={{...card(),textAlign:"center",padding:"60px 20px"}}><Spin sz={30}/><div style={{fontSize:12,color:MUTED,marginTop:14}}>Procesando operación con Método 360™...</div></div>}
             {iaGlobal&&!iaLoad&&(
               <div style={card()}>
                 <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:16}}>
                   <div style={{width:34,height:34,background:`${G}18`,borderRadius:9,display:"flex",alignItems:"center",justifyContent:"center",fontSize:14,color:G}}>✦</div>
                   <div>
                     <div style={{fontSize:11,fontWeight:700,color:G}}>ANÁLISIS IA — MÉTODO 360™</div>
-                    <div style={{fontSize:9,color:"rgba(255,255,255,0.3)"}}>{new Date().toLocaleDateString("es-CO")}</div>
+                    <div style={{fontSize:9,color:MUTED}}>{new Date().toLocaleDateString("es-CO")}</div>
                   </div>
                 </div>
                 <div style={{fontSize:12,lineHeight:1.9,color:"rgba(255,255,255,0.72)",whiteSpace:"pre-wrap",borderLeft:`2px solid ${G}`,paddingLeft:14}}>{iaGlobal}</div>
@@ -1054,20 +1066,20 @@ export default function CRM360() {
 
       {/* ══ PANEL LATERAL CLIENTE ════════════════════════════════════ */}
       {sel&&(
-        <div style={{width:400,background:S1,borderLeft:"1px solid rgba(255,255,255,0.04)",
+        <div style={{width:400,background:S1,
           display:"flex",flexDirection:"column",animation:"slideR .25s ease",flexShrink:0,
           position:"sticky",top:0,height:"100vh",overflowY:"auto"}}>
           {/* Header */}
-          <div style={{padding:"20px 20px 12px",borderBottom:"1px solid rgba(255,255,255,0.05)",flexShrink:0}}>
+          <div style={{padding:"20px 20px 12px",borderBottom:`1px solid ${BORDER}`,flexShrink:0}}>
             <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:10}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:40,height:40,borderRadius:11,background:`${sel.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:15,fontWeight:800,color:sel.color}}>{sel.nombre.charAt(0)}</div>
                 <div>
                   <div style={{fontWeight:800,fontSize:14}}>{sel.nombre}</div>
-                  <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:1}}>{sel.tipoServicio}</div>
+                  <div style={{fontSize:10,color:MUTED,marginTop:1}}>{sel.tipoServicio}</div>
                 </div>
               </div>
-              <button onClick={()=>setSel(null)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:17,lineHeight:1}}>✕</button>
+              <button onClick={()=>setSel(null)} style={{background:"none",border:"none",color:MUTED,cursor:"pointer",fontSize:17,lineHeight:1}}>✕</button>
             </div>
             <div style={{display:"flex",gap:6,flexWrap:"wrap"}}>
               <span style={pill(fc[sel.fase]||G)}>{sel.fase}</span>
@@ -1076,10 +1088,10 @@ export default function CRM360() {
             </div>
           </div>
           {/* Tabs */}
-          <div style={{display:"flex",borderBottom:"1px solid rgba(255,255,255,0.05)",flexShrink:0,overflowX:"auto"}}>
+          <div style={{display:"flex",borderBottom:`1px solid ${BORDER}`,flexShrink:0,overflowX:"auto"}}>
             {PANEL_TABS_CLIENTE.map(([id,lbl])=>(
               <div key={id} onClick={()=>setPanelTab(id)} style={{flexShrink:0,padding:"10px 12px",textAlign:"center",fontSize:11,cursor:"pointer",
-                fontWeight:panelTab===id?700:400,color:panelTab===id?G:"rgba(255,255,255,0.28)",
+                fontWeight:panelTab===id?600:400,color:panelTab===id?G:MUTED,
                 borderBottom:`2px solid ${panelTab===id?G:"transparent"}`,whiteSpace:"nowrap"}}>
                 {lbl}
               </div>
@@ -1092,12 +1104,12 @@ export default function CRM360() {
             {panelTab==="resumen"&&(
               <div>
                 {sel.score>0&&(
-                  <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,padding:12,background:"rgba(255,255,255,0.02)",borderRadius:12,border:"1px solid rgba(255,255,255,0.04)"}}>
+                  <div style={{display:"flex",gap:12,alignItems:"center",marginBottom:16,padding:12,background:S2,borderRadius:12,border:`1px solid ${BORDER}`}}>
                     <div style={{position:"relative",width:72,height:72,flexShrink:0}}>
                       <Gauge val={sel.score} size={72} stroke={6} color={sc(sel.score)}/>
                       <div style={{position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center"}}>
                         <span style={{fontSize:18,fontWeight:800,color:sc(sel.score),lineHeight:1}}>{sel.score}</span>
-                        <span style={{fontSize:8,color:"rgba(255,255,255,0.25)"}}>score</span>
+                        <span style={{fontSize:8,color:MUTED}}>score</span>
                       </div>
                     </div>
                     <Radar scores={sel.scores} size={100}/>
@@ -1108,7 +1120,7 @@ export default function CRM360() {
                     {PILARES.map(p=>(
                       <div key={p} style={{marginBottom:6}}>
                         <div style={{display:"flex",justifyContent:"space-between",fontSize:10,marginBottom:2}}>
-                          <span style={{color:"rgba(255,255,255,0.38)"}}>{PL[p]}</span>
+                          <span style={{color:MUTED}}>{PL[p]}</span>
                           <span style={{color:sc(sel.scores[p]),fontWeight:700}}>{sel.scores[p]}</span>
                         </div>
                         <div style={{height:3,background:"rgba(255,255,255,0.06)",borderRadius:2}}>
@@ -1118,10 +1130,10 @@ export default function CRM360() {
                     ))}
                   </div>
                 )}
-                <div style={{fontSize:9,color:"rgba(255,255,255,0.22)",letterSpacing:"0.1em",marginBottom:4}}>RESUMEN</div>
-                <div style={{fontSize:12,color:"rgba(255,255,255,0.6)",lineHeight:1.7,marginBottom:12}}>{sel.resumen}</div>
-                <div style={{fontSize:9,color:"rgba(255,255,255,0.22)",letterSpacing:"0.1em",marginBottom:4}}>NOTAS</div>
-                <div style={{fontSize:12,color:"rgba(255,255,255,0.4)",lineHeight:1.7,marginBottom:16}}>{sel.notas||"—"}</div>
+                <div style={{fontSize:9,color:MUTED,letterSpacing:"0.1em",marginBottom:4}}>RESUMEN</div>
+                <div style={{fontSize:12,color:TXT,lineHeight:1.7,marginBottom:12}}>{sel.resumen}</div>
+                <div style={{fontSize:9,color:MUTED,letterSpacing:"0.1em",marginBottom:4}}>NOTAS</div>
+                <div style={{fontSize:12,color:TXT,lineHeight:1.7,marginBottom:16}}>{sel.notas||"—"}</div>
                 <div style={{display:"flex",gap:8}}>
                   <a href={`mailto:${sel.email}`} style={{...BtnO,textDecoration:"none",fontSize:11,padding:"8px 12px"}}>✉ Email</a>
                   <a href={`https://wa.me/${sel.wa.replace(/\D/g,"")}`} target="_blank" rel="noreferrer"
@@ -1134,23 +1146,23 @@ export default function CRM360() {
             {panelTab==="contenido"&&(
               <div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>{sel.contenido.length} piezas totales</div>
+                  <div style={{fontSize:11,color:TXT}}>{sel.contenido.length} piezas totales</div>
                   <button style={{...BtnO,padding:"5px 10px",fontSize:10}} onClick={()=>setModal("contenido")}>+ Agregar</button>
                 </div>
-                {sel.contenido.length===0&&<div style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>Sin piezas.</div>}
+                {sel.contenido.length===0&&<div style={{fontSize:11,color:MUTED}}>Sin piezas.</div>}
                 {sel.contenido.sort((a,b)=>a.semana>b.semana?1:-1).map(co=>{
                   const es=ESTADO_CONTENIDO[co.estado]||{c:"#555",l:co.estado};
                   return (
                     <div key={co.id} className="hov" onClick={()=>cicloEstadoContenido(sel.id,co.id)}
-                      style={{padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+                      style={{padding:"10px 0",borderBottom:`1px solid ${BORDER}`,cursor:"pointer"}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:4}}>
                         <div style={{flex:1,minWidth:0}}>
                           <div style={{fontSize:11,fontWeight:600,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{co.descripcion}</div>
-                          <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:2}}>{co.semana} · {co.tipo} · {co.responsable}</div>
+                          <div style={{fontSize:9,color:MUTED,marginTop:2}}>{co.semana} · {co.tipo} · {co.responsable}</div>
                         </div>
                         <span style={{...pill(es.c),marginLeft:8}}>{es.l}</span>
                       </div>
-                      {co.observacion&&<div style={{fontSize:9,color:"rgba(255,255,255,0.25)",fontStyle:"italic"}}>{co.observacion}</div>}
+                      {co.observacion&&<div style={{fontSize:9,color:MUTED,fontStyle:"italic"}}>{co.observacion}</div>}
                     </div>
                   );
                 })}
@@ -1161,29 +1173,29 @@ export default function CRM360() {
             {panelTab==="pautas"&&(
               <div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>{sel.pautas.length} pautas</div>
+                  <div style={{fontSize:11,color:TXT}}>{sel.pautas.length} pautas</div>
                   <button style={{...BtnO,padding:"5px 10px",fontSize:10}} onClick={()=>setModal("pauta")}>+ Pauta</button>
                 </div>
-                {sel.pautas.length===0&&<div style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>Sin pautas registradas.</div>}
+                {sel.pautas.length===0&&<div style={{fontSize:11,color:MUTED}}>Sin pautas registradas.</div>}
                 {sel.pautas.map(p=>{
                   const es=ESTADO_PAUTA[p.estado]||{c:"#555",l:p.estado};
                   const pct=Math.round((p.gastado/p.presupuesto)*100)||0;
                   return (
-                    <div key={p.id} style={{padding:"12px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                    <div key={p.id} style={{padding:"12px 0",borderBottom:`1px solid ${BORDER}`}}>
                       <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",marginBottom:8}}>
                         <div>
                           <div style={{fontWeight:700,fontSize:12}}>{p.plataforma}</div>
-                          <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:1}}>{p.inicio} → {p.fin}</div>
+                          <div style={{fontSize:9,color:MUTED,marginTop:1}}>{p.inicio} → {p.fin}</div>
                         </div>
                         <span style={pill(es.c)}>{es.l}</span>
                       </div>
                       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8,marginBottom:8}}>
-                        <div style={{background:"rgba(255,255,255,0.025)",borderRadius:7,padding:"6px 8px"}}>
-                          <div style={{fontSize:8,color:"rgba(255,255,255,0.3)"}}>PRESUPUESTO</div>
+                        <div style={{background:S2,borderRadius:7,padding:"6px 8px"}}>
+                          <div style={{fontSize:8,color:MUTED}}>PRESUPUESTO</div>
                           <div style={{fontSize:12,fontWeight:700,color:G}}>{fmt(p.presupuesto)}</div>
                         </div>
-                        <div style={{background:"rgba(255,255,255,0.025)",borderRadius:7,padding:"6px 8px"}}>
-                          <div style={{fontSize:8,color:"rgba(255,255,255,0.3)"}}>GASTADO</div>
+                        <div style={{background:S2,borderRadius:7,padding:"6px 8px"}}>
+                          <div style={{fontSize:8,color:MUTED}}>GASTADO</div>
                           <div style={{fontSize:12,fontWeight:700}}>{fmt(p.gastado)}</div>
                         </div>
                       </div>
@@ -1191,7 +1203,7 @@ export default function CRM360() {
                         <div style={{width:`${pct}%`,height:"100%",background:G,borderRadius:2}}/>
                       </div>
                       <div style={{fontSize:10,color:GREEN}}>{p.resultado}</div>
-                      <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginTop:2}}>Objetivo: {p.objetivo}</div>
+                      <div style={{fontSize:9,color:MUTED,marginTop:2}}>Objetivo: {p.objetivo}</div>
                     </div>
                   );
                 })}
@@ -1202,19 +1214,19 @@ export default function CRM360() {
             {panelTab==="entregables"&&(
               <div>
                 <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
-                  <div style={{fontSize:11,color:"rgba(255,255,255,0.4)"}}>{sel.entregables.filter(e=>e.estado!=="entregado").length} pendientes</div>
+                  <div style={{fontSize:11,color:TXT}}>{sel.entregables.filter(e=>e.estado!=="entregado").length} pendientes</div>
                   <button style={{...BtnO,padding:"5px 10px",fontSize:10}} onClick={()=>setModal("entregable")}>+ Agregar</button>
                 </div>
-                {sel.entregables.length===0&&<div style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>Sin entregables.</div>}
+                {sel.entregables.length===0&&<div style={{fontSize:11,color:MUTED}}>Sin entregables.</div>}
                 {sel.entregables.map(e=>{
                   const es=ESTADO_ENTREGABLE[e.estado]||{c:"#555",l:e.estado};
                   return (
                     <div key={e.id} className="hov" onClick={()=>cicloEstadoEntregable(sel.id,e.id)}
-                      style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:"1px solid rgba(255,255,255,0.04)",cursor:"pointer"}}>
+                      style={{display:"flex",alignItems:"flex-start",gap:10,padding:"10px 0",borderBottom:`1px solid ${BORDER}`,cursor:"pointer"}}>
                       <div style={{width:6,height:6,borderRadius:"50%",background:es.c,flexShrink:0,marginTop:4}}/>
                       <div style={{flex:1}}>
                         <div style={{fontSize:12,fontWeight:600,color:e.estado==="entregado"?"rgba(255,255,255,0.3)":"#fff",textDecoration:e.estado==="entregado"?"line-through":"none"}}>{e.nombre}</div>
-                        <div style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:2}}>{e.tipo} · {e.fecha}</div>
+                        <div style={{fontSize:9,color:MUTED,marginTop:2}}>{e.tipo} · {e.fecha}</div>
                       </div>
                       <span style={pill(es.c)}>{es.l}</span>
                     </div>
@@ -1226,7 +1238,7 @@ export default function CRM360() {
             {/* PAGOS panel */}
             {panelTab==="pagos"&&(
               <div>
-                <div style={{padding:14,background:"rgba(255,255,255,0.02)",borderRadius:12,border:"1px solid rgba(255,255,255,0.04)",marginBottom:14}}>
+                <div style={{padding:14,background:S2,borderRadius:12,border:`1px solid ${BORDER}`,marginBottom:14}}>
                   <div style={{display:"flex",gap:12,alignItems:"center"}}>
                     <div style={{position:"relative",width:68,height:68,flexShrink:0}}>
                       <Gauge val={sel.contrato>0?Math.round((sel.pagado/sel.contrato)*100):0} size={68} stroke={5} color={sel.pagado===sel.contrato?GREEN:G}/>
@@ -1235,7 +1247,7 @@ export default function CRM360() {
                       </div>
                     </div>
                     <div>
-                      <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:3}}>CONTRATO TOTAL</div>
+                      <div style={{fontSize:9,color:MUTED,marginBottom:3}}>CONTRATO TOTAL</div>
                       <div style={{fontSize:22,fontWeight:800,color:G}}>{fmt(sel.contrato)}</div>
                     </div>
                   </div>
@@ -1251,11 +1263,11 @@ export default function CRM360() {
                   </div>
                 </div>
                 <div style={{marginBottom:8}}>
-                  <div style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginBottom:4}}>INICIO</div>
+                  <div style={{fontSize:9,color:MUTED,marginBottom:4}}>INICIO</div>
                   <div style={{fontSize:13,fontWeight:600}}>{sel.inicio||"No definido"}</div>
                 </div>
                 <div>
-                  <div style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginBottom:4}}>INGRESOS CLIENTE</div>
+                  <div style={{fontSize:9,color:MUTED,marginBottom:4}}>INGRESOS CLIENTE</div>
                   <div style={{fontSize:13,fontWeight:600}}>{sel.ingresos}</div>
                 </div>
               </div>
@@ -1274,15 +1286,15 @@ export default function CRM360() {
                   {chat.map((m,i)=>(
                     <div key={i} style={{alignSelf:m.r==="user"?"flex-end":"flex-start",maxWidth:"86%",
                       padding:"9px 12px",borderRadius:m.r==="user"?"12px 12px 3px 12px":"12px 12px 12px 3px",
-                      background:m.r==="user"?"rgba(245,197,24,0.1)":"rgba(255,255,255,0.04)",
-                      border:`1px solid ${m.r==="user"?"rgba(245,197,24,0.18)":"rgba(255,255,255,0.06)"}`}}>
-                      {m.r==="ai"&&<div style={{fontSize:8,color:G,fontWeight:700,marginBottom:3,letterSpacing:"0.1em"}}>✦ IA 360™</div>}
-                      <div style={{fontSize:11,color:m.r==="user"?G:"rgba(255,255,255,0.78)",lineHeight:1.6,whiteSpace:"pre-wrap"}}>{m.t}</div>
+                      background:m.r==="user"?`${G}15`:S2,
+                      border:`1px solid ${m.r==="user"?`${G}30`:BORDER}`}}>
+                      {m.r==="ai"&&<div style={{fontSize:8,color:G,fontWeight:600,marginBottom:3,letterSpacing:"0.08em"}}>✦ IA 360™</div>}
+                      <div style={{fontSize:11,color:m.r==="user"?G:TXT,lineHeight:1.6,whiteSpace:"pre-wrap"}}>{m.t}</div>
                     </div>
                   ))}
                   {chatLoad&&(
-                    <div style={{alignSelf:"flex-start",display:"flex",gap:7,padding:"7px 12px",background:"rgba(255,255,255,0.04)",borderRadius:10,border:"1px solid rgba(255,255,255,0.06)"}}>
-                      <Spin sz={11}/><span style={{fontSize:10,color:"rgba(255,255,255,0.28)"}}>Analizando...</span>
+                    <div style={{alignSelf:"flex-start",display:"flex",gap:7,padding:"7px 12px",background:S2,borderRadius:10,border:`1px solid ${BORDER}`}}>
+                      <Spin sz={11}/><span style={{fontSize:10,color:MUTED}}>Analizando...</span>
                     </div>
                   )}
                 </div>
@@ -1302,41 +1314,41 @@ export default function CRM360() {
 
       {/* ══ PANEL LATERAL EQUIPO ═════════════════════════════════════ */}
       {selEq&&!sel&&(
-        <div style={{width:360,background:S1,borderLeft:"1px solid rgba(255,255,255,0.04)",
+        <div style={{width:360,background:S1,
           display:"flex",flexDirection:"column",animation:"slideR .25s ease",flexShrink:0,
           position:"sticky",top:0,height:"100vh",overflowY:"auto"}}>
-          <div style={{padding:"20px 20px 14px",borderBottom:"1px solid rgba(255,255,255,0.05)"}}>
+          <div style={{padding:"20px 20px 14px",borderBottom:`1px solid ${BORDER}`}}>
             <div style={{display:"flex",justifyContent:"space-between"}}>
               <div style={{display:"flex",alignItems:"center",gap:10}}>
                 <div style={{width:42,height:42,borderRadius:12,background:`${selEq.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:16,fontWeight:800,color:selEq.color}}>{selEq.nombre.charAt(0)}</div>
                 <div>
                   <div style={{fontWeight:800,fontSize:14}}>{selEq.nombre}</div>
-                  <div style={{fontSize:10,color:"rgba(255,255,255,0.3)",marginTop:1}}>{selEq.rol} · {selEq.especialidad}</div>
+                  <div style={{fontSize:10,color:MUTED,marginTop:1}}>{selEq.rol} · {selEq.especialidad}</div>
                 </div>
               </div>
-              <button onClick={()=>setSelEq(null)} style={{background:"none",border:"none",color:"rgba(255,255,255,0.2)",cursor:"pointer",fontSize:17}}>✕</button>
+              <button onClick={()=>setSelEq(null)} style={{background:"none",border:"none",color:MUTED,cursor:"pointer",fontSize:17}}>✕</button>
             </div>
           </div>
           <div style={{flex:1,overflow:"auto",padding:"16px 20px"}}>
             <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10,marginBottom:16}}>
               <div style={card({padding:12})}>
-                <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:3}}>HONORARIO</div>
+                <div style={{fontSize:9,color:MUTED,marginBottom:3}}>HONORARIO</div>
                 <div style={{fontSize:16,fontWeight:800,color:G}}>{fmt(selEq.pago)}</div>
-                <div style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:2}}>{selEq.tipoPago}</div>
+                <div style={{fontSize:9,color:MUTED,marginTop:2}}>{selEq.tipoPago}</div>
               </div>
               <div style={card({padding:12})}>
-                <div style={{fontSize:9,color:"rgba(255,255,255,0.3)",marginBottom:3}}>EMAIL</div>
+                <div style={{fontSize:9,color:MUTED,marginBottom:3}}>EMAIL</div>
                 <div style={{fontSize:10,fontWeight:600,color:BLUE}}>{selEq.email}</div>
               </div>
             </div>
             {/* Clientes asignados */}
             <div style={{marginBottom:16}}>
-              <div style={{fontSize:10,fontWeight:700,marginBottom:8,color:"rgba(255,255,255,0.5)",letterSpacing:"0.08em"}}>CLIENTES ASIGNADOS</div>
+              <div style={{fontSize:10,fontWeight:700,marginBottom:8,color:TXT,letterSpacing:"0.08em"}}>CLIENTES ASIGNADOS</div>
               {selEq.clientes.map(cid=>{
                 const c=clientes.find(x=>x.id===cid);
                 if(!c) return null;
                 return (
-                  <div key={cid} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                  <div key={cid} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:`1px solid ${BORDER}`}}>
                     <div style={{display:"flex",alignItems:"center",gap:8}}>
                       <div style={{width:22,height:22,borderRadius:6,background:`${c.color}20`,display:"flex",alignItems:"center",justifyContent:"center",fontSize:9,fontWeight:800,color:c.color}}>{c.nombre.charAt(0)}</div>
                       <span style={{fontSize:12,fontWeight:600}}>{c.nombre}</span>
@@ -1345,19 +1357,19 @@ export default function CRM360() {
                   </div>
                 );
               })}
-              {selEq.clientes.length===0&&<div style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>Sin clientes asignados.</div>}
+              {selEq.clientes.length===0&&<div style={{fontSize:11,color:MUTED}}>Sin clientes asignados.</div>}
             </div>
             {/* Historial pagos */}
             <div>
-              <div style={{fontSize:10,fontWeight:700,marginBottom:8,color:"rgba(255,255,255,0.5)",letterSpacing:"0.08em"}}>HISTORIAL PAGOS</div>
-              {selEq.pagos.length===0&&<div style={{fontSize:11,color:"rgba(255,255,255,0.2)"}}>Sin registros.</div>}
+              <div style={{fontSize:10,fontWeight:700,marginBottom:8,color:TXT,letterSpacing:"0.08em"}}>HISTORIAL PAGOS</div>
+              {selEq.pagos.length===0&&<div style={{fontSize:11,color:MUTED}}>Sin registros.</div>}
               {selEq.pagos.map(p=>{
                 const pe=PAGO_ESTADO[p.estado]||{c:"#555",l:p.estado};
                 return (
-                  <div key={p.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:"1px solid rgba(255,255,255,0.04)"}}>
+                  <div key={p.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",padding:"8px 0",borderBottom:`1px solid ${BORDER}`}}>
                     <div>
                       <div style={{fontSize:12,fontWeight:600}}>{p.mes}</div>
-                      {p.fecha&&<div style={{fontSize:9,color:"rgba(255,255,255,0.25)",marginTop:1}}>{p.estado==="pagado"?`Pagado ${p.fecha}`:""}</div>}
+                      {p.fecha&&<div style={{fontSize:9,color:MUTED,marginTop:1}}>{p.estado==="pagado"?`Pagado ${p.fecha}`:""}</div>}
                     </div>
                     <div style={{textAlign:"right"}}>
                       <div style={{fontSize:12,fontWeight:700,color:pe.c}}>{p.monto>0?fmt(p.monto):"—"}</div>
@@ -1373,7 +1385,7 @@ export default function CRM360() {
 
       {/* ══ MODALES ══════════════════════════════════════════════════ */}
       {modal&&(
-        <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.78)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}
+        <div style={{position:"fixed",inset:0,background:"rgba(44,44,44,0.5)",zIndex:300,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}
           onClick={()=>{setModal(null);setModalData({})}}>
           <div style={{...card(),width:420,maxWidth:"95vw",animation:"fadeUp .2s ease"}}
             onClick={e=>e.stopPropagation()}>
@@ -1381,12 +1393,12 @@ export default function CRM360() {
             {/* CLIENTE */}
             {modal==="cliente"&&(
               <>
-                <div style={{fontWeight:800,fontSize:15,marginBottom:16}}>+ Nuevo cliente</div>
+                <div style={{fontWeight:700,fontSize:15,color:TXT,marginBottom:16}}>+ Nuevo cliente</div>
                 {[["nombre","Nombre del negocio *","text"],["sector","Sector","text"],["contacto","Contacto","text"],
                   ["email","Email","email"],["wa","WhatsApp","text"],["servicio","Tipo de servicio","text"],
                   ["ingresos","Rango de ingresos","text"],["contrato","Valor contrato COP","number"]].map(([f,l,t])=>(
                   <div key={f} style={{marginBottom:10}}>
-                    <div style={{fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
+                    <div style={{fontSize:8,color:MUTED,letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
                     <input type={t} style={INP} placeholder={l} value={modalData[f]||""} onChange={e=>setModalData(p=>({...p,[f]:e.target.value}))}/>
                   </div>
                 ))}
@@ -1396,11 +1408,11 @@ export default function CRM360() {
             {/* CONTENIDO */}
             {modal==="contenido"&&(
               <>
-                <div style={{fontWeight:800,fontSize:15,marginBottom:16}}>+ Pieza de contenido — {sel?.nombre}</div>
+                <div style={{fontWeight:700,fontSize:15,color:TXT,marginBottom:16}}>+ Pieza de contenido — {sel?.nombre}</div>
                 {[["semana","Semana (fecha)","date"],["tipo","Tipo (Reels / Carrusel / Stories / Post)","text"],
                   ["descripcion","Descripción","text"],["responsable","Responsable","text"],["observacion","Observación","text"]].map(([f,l,t])=>(
                   <div key={f} style={{marginBottom:10}}>
-                    <div style={{fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
+                    <div style={{fontSize:8,color:MUTED,letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
                     <input type={t} style={INP} placeholder={l} value={modalData[f]||""} onChange={e=>setModalData(p=>({...p,[f]:e.target.value}))}/>
                   </div>
                 ))}
@@ -1410,11 +1422,11 @@ export default function CRM360() {
             {/* PAUTA */}
             {modal==="pauta"&&(
               <>
-                <div style={{fontWeight:800,fontSize:15,marginBottom:16}}>+ Nueva pauta — {sel?.nombre}</div>
+                <div style={{fontWeight:700,fontSize:15,color:TXT,marginBottom:16}}>+ Nueva pauta — {sel?.nombre}</div>
                 {[["plataforma","Plataforma (Meta Ads / Google / TikTok)","text"],["presupuesto","Presupuesto COP","number"],
                   ["inicio","Fecha inicio","date"],["fin","Fecha fin","date"],["objetivo","Objetivo (Tráfico / Ventas / Marca)","text"]].map(([f,l,t])=>(
                   <div key={f} style={{marginBottom:10}}>
-                    <div style={{fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
+                    <div style={{fontSize:8,color:MUTED,letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
                     <input type={t} style={INP} placeholder={l} value={modalData[f]||""} onChange={e=>setModalData(p=>({...p,[f]:e.target.value}))}/>
                   </div>
                 ))}
@@ -1424,11 +1436,11 @@ export default function CRM360() {
             {/* ENTREGABLE */}
             {modal==="entregable"&&(
               <>
-                <div style={{fontWeight:800,fontSize:15,marginBottom:16}}>+ Entregable — {sel?.nombre}</div>
+                <div style={{fontWeight:700,fontSize:15,color:TXT,marginBottom:16}}>+ Entregable — {sel?.nombre}</div>
                 {[["nombre","Nombre del entregable","text"],["tipo","Tipo (Estrategia / Informe / Propuesta / Diagnóstico)","text"],
                   ["fecha","Fecha límite","date"]].map(([f,l,t])=>(
                   <div key={f} style={{marginBottom:10}}>
-                    <div style={{fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
+                    <div style={{fontSize:8,color:MUTED,letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
                     <input type={t} style={INP} placeholder={l} value={modalData[f]||""} onChange={e=>setModalData(p=>({...p,[f]:e.target.value}))}/>
                   </div>
                 ))}
@@ -1438,12 +1450,12 @@ export default function CRM360() {
             {/* EQUIPO */}
             {modal==="equipo"&&(
               <>
-                <div style={{fontWeight:800,fontSize:15,marginBottom:16}}>+ Nuevo miembro</div>
+                <div style={{fontWeight:700,fontSize:15,color:TXT,marginBottom:16}}>+ Nuevo miembro</div>
                 {[["nombre","Nombre completo *","text"],["rol","Rol (Content Creator / Diseñador / Media Buyer)","text"],
                   ["especialidad","Especialidad","text"],["email","Email","email"],
                   ["pago","Honorario COP mensual","number"],["tipoPago","Tipo pago (Mensual fijo / Por proyecto / Por cliente)","text"]].map(([f,l,t])=>(
                   <div key={f} style={{marginBottom:10}}>
-                    <div style={{fontSize:8,color:"rgba(255,255,255,0.25)",letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
+                    <div style={{fontSize:8,color:MUTED,letterSpacing:"0.1em",marginBottom:4}}>{l.toUpperCase()}</div>
                     <input type={t} style={INP} placeholder={l} value={modalData[f]||""} onChange={e=>setModalData(p=>({...p,[f]:e.target.value}))}/>
                   </div>
                 ))}
