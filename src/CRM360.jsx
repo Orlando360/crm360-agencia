@@ -24,7 +24,7 @@ async function callClaude(system, user) {
   try {
     const r = await fetch("/api/claude", {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ model:"claude-sonnet-4-5-20251001", max_tokens:1000, system, messages:[{role:"user",content:user}] })
+      body: JSON.stringify({ model:"claude-opus-4-7", max_tokens:1400, system, messages:[{role:"user",content:user}] })
     });
     const d = await r.json();
     return d.content?.[0]?.text || "Sin respuesta.";
